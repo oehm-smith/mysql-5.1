@@ -29,25 +29,31 @@ RUN apt-get update && apt-get install -y curl --no-install-recommends && rm -rf 
 	&& find /usr/local/mysql -type f -name "*.a" -delete \
 	&& apt-get update && apt-get install -y binutils && rm -rf /var/lib/apt/lists/* \
 	&& { find /usr/local/mysql -type f -executable -exec strip --strip-all '{}' + || true; } \
-	&& apt-get purge -y --auto-remove binutils
+	&& apt-get purge -y --auto-remove binutils \
+	&& ln -s /usr/local/mysql/share /usr/share/
+
+RUN mkdir -p /etc/mysql/conf.d
 ENV PATH $PATH:/usr/local/mysql/bin:/usr/local/mysql/scripts
 
 # replicate some of the way the APT package configuration works
 # this is only for 5.5 since it doesn't have an APT repo, and will go away when 5.5 does
-RUN mkdir -p /etc/mysql/conf.d \
-	&& { \
-		echo '[mysqld]'; \
-		echo 'skip-host-cache'; \
-		echo 'skip-name-resolve'; \
-		echo 'user = mysql'; \
-		echo 'datadir = /var/lib/mysql'; \
-		echo '!includedir /etc/mysql/conf.d/'; \
-	} > /etc/mysql/my.cnf
+#RUN mkdir -p /etc/mysql/conf.d \
+#	&& { \
+#		echo '[mysqld]'; \
+#		echo 'skip-host-cache'; \
+#		echo 'skip-name-resolve'; \
+#		echo 'user = mysql'; \
+#		echo 'datadir = /var/lib/mysql'; \
+#		echo '!includedir /etc/mysql/conf.d/'; \
+#	} > /etc/mysql/my.cnf
 
 VOLUME /var/lib/mysql
 
 COPY docker-entrypoint.sh /entrypoint.sh
+COPY my.cnf /etc/mysql/my.cnf
+
 ENTRYPOINT ["/entrypoint.sh"]
 
 EXPOSE 3306
 CMD ["mysqld"]
+#, "--lc_messages_dir","/usr/local/mysql/share"]
