@@ -3,8 +3,6 @@ FROM debian:jessie
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
 RUN groupadd -r mysql && useradd -r -g mysql mysql
 
-RUN mkdir /docker-entrypoint-initdb.d
-
 # FATAL ERROR: please install the following Perl modules before executing /usr/local/mysql/scripts/mysql_install_db:
 # File::Basename
 # File::Copy
@@ -33,6 +31,8 @@ RUN apt-get update && apt-get install -y curl --no-install-recommends && rm -rf 
 	&& ln -s /usr/local/mysql/share /usr/share/
 
 RUN mkdir -p /etc/mysql/conf.d
+RUN mkdir -p /opt/mysql/backup
+
 ENV PATH $PATH:/usr/local/mysql/bin:/usr/local/mysql/scripts
 
 # replicate some of the way the APT package configuration works
@@ -49,10 +49,10 @@ ENV PATH $PATH:/usr/local/mysql/bin:/usr/local/mysql/scripts
 
 VOLUME /var/lib/mysql
 
-COPY docker-entrypoint.sh /entrypoint.sh
-COPY my.cnf /etc/mysql/my.cnf
+COPY docker-entrypoint.sh /
+COPY my.cnf /etc/mysql/
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
 
 EXPOSE 3306
 CMD ["mysqld"]

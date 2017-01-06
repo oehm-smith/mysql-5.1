@@ -1,16 +1,19 @@
 #!/bin/bash
 set -e
 
+echo docker entrypoint - 1: $1
 # if command starts with an option, prepend mysqld
 if [ "${1:0:1}" = '-' ]; then
 	set -- mysqld "$@"
 fi
 
 if [ "$1" = 'mysqld' ]; then
+	echo inside mysqld
 	# Get config
 	DATADIR="/var/lib/mysql"
-
-	if [ ! -d "$DATADIR" ]; then
+	NUMFILESIN=$(ls $DATADIR | wc -l)
+	if [[ $NUMFILESIN -eq 0 ]]; then
+		echo DATADIR: $DATADIR is empty
 		if [ -z "$MYSQL_ROOT_PASSWORD" -a -z "$MYSQL_ALLOW_EMPTY_PASSWORD" ]; then
 			echo >&2 'error: database is uninitialized and MYSQL_ROOT_PASSWORD not set'
 			echo >&2 '  Did you forget to add -e MYSQL_ROOT_PASSWORD=... ?'
@@ -92,6 +95,8 @@ if [ "$1" = 'mysqld' ]; then
 		echo
 		echo 'MySQL init process done. Ready for start up.'
 		echo
+	else
+		echo DATADIR: $DATADIR exists
 	fi
 
 	chown -R mysql:mysql "$DATADIR"
